@@ -1,0 +1,139 @@
+Please note that for the functions defined below to work as expected, normalisation of the data is required between 0 and 1.
+
+Function to calculate CaMI
+
+Input for the caMIcalc: takes bivariate data as a first argument (data_), the other 2 arguments are ordX and ordY (ordX_, ordY_) - length of the symbolic sequence for analysis in x and y, for example ordX=2 and ordY=5: blocks of 2 points in variable X and 5 points in variable Y will be analysed. In this case, causality is measured considering 2 points of the past of X channel in the time-series, and 2 points of the past and 3 points of the future of the Y channel of the time-series.
+Output of the caMIcalc: returns the Causal mutual information from X to Y or Y to X, depending on the last 2 input arguments, specified by the user
+
+caMIcacl[data_, ordX_, ordY_] := 
+ Module[{tempX, tempY, bemapX, tupY, tupX, plotData, bemapY, posX, posY, 
+   finalPos, voidPos, finalPosition, jointData, caMI, hx, hy, hxy, margprobsX,
+    margprobsY, joinProb},
+  tempX = data[[All, 1]];
+  tempY = data[[All, 2]];
+  Table[If[data[[i, 1]] <= 0.5, tempX[[i]] = 0, tempX[[i]] = 1], {i, 
+    Length[data]}]; (*making tempX to be composed of 1s and 0s to start the \
+partitions*)
+  Table[If[data[[i, 2]] <= 0.5, tempY[[i]] = 0, tempY[[i]] = 1], {i, 
+    Length[data]}];
+  bemapX = 
+   Partition[tempX, ordX, 
+    1];(*creating the encoding pattern based on the order of X*)
+  bemapY = Partition[tempY, ordY, 1];
+  tupX = Tuples[{0, 1}, 
+    ordX];(*creating each of the encoding cases to check later*)
+  tupY = Tuples[{0, 1}, ordY];
+  posX = Table[
+    Position[bemapX, tupX[[i]]] // Flatten, {i, 1, 
+     Length@tupX}]; (*getting the positions of x for each of the encoding \
+cases*)
+  posY = Table[
+    Position[bemapY, tupY[[i]]] // Flatten, {i, 1, 
+     Length@tupY}];(*getting the positions of Y for each of the encoding \
+cases*)
+  margprobsX = 
+   Table[Length@posX[[i]]/Total[Length /@ posX], {i, 1, Length@posX}];
+  margprobsY = 
+   Table[Length@posY[[i]]/Total[Length /@ posY], {i, 1, Length@posY}];
+  finalPos = 
+   Flatten[Table[
+     Flatten[Intersection[posX[[i]], posY[[j]]]], {i, 1, Length@posX}, {j, 1, 
+      Length@posY}], 1];
+  voidPos = 
+   Position[Table[Length@finalPos[[i]] == 0, {i, 1, Length@finalPos}], True];
+  finalPosition = 
+   Delete[finalPos, 
+    voidPos];(*removing the points where the probability is 0 so there is no \
+1/0 interdermined*)
+  jointData = Table[data[[finalPosition[[i]]]], {i, 1, Length@finalPosition}];
+  joinProb = 
+   Table[Length@jointData[[i]]/Total[Length /@ jointData], {i, 1, 
+     Length@jointData}];
+  (*calculating the Shannon entropies for X, Y and the joint XY*)
+  hx = N[-Total[
+      Table[If[margprobsX[[i]] != 0, margprobsX[[i]]*Log2[margprobsX[[i]]], 
+        0], {i, 1, Length@margprobsX}]]];
+  hy = N[-Total[
+      Table[If[margprobsY[[i]] != 0, margprobsY[[i]]*Log2[margprobsY[[i]]], 
+        0], {i, 1, Length@margprobsY}]]];
+  hxy = -N[
+     Total[Table[joinProb[[i]]*Log2[joinProb[[i]]], {i, 1, Length@joinProb}]]];
+  caMI = N[
+    hx + hy - 
+     hxy];(*CaMI is calculated this way but only if X and Y have different \
+orders, at least 2*L of difference*)
+  N[caMI]
+  ]
+
+This function is more general but should be used with 1st argument as the bivariate TS  the orders of partition. As a rule to infer causality from X to Y, if the the partitioning order in X is L, then the partitioning order in Y should 2*L (caMIcalc[ts, 2, 4]). Conversely, to infer causality from Y to X the opposite orders can be used (caMIcalc[ts, 4, 2]).
+
+Function to obtain mutual information
+
+Input for mi: takes bivariate data (data_), if one wants to use time series with more  than 2 channels, the specific channels need to be specified in the input.
+Output for mi: mutual information quantity, calculated using symbolic sequence of order 2.
+
+mi[data_] := 
+ Module[{tempX, tempY, bemapX, tupY, tupX, plotData, bemapY, posX, posY, 
+   finalPos, voidPos, finalPosition, jointData, caMI, hx, hy, hxy, margprobsX,
+    margprobsY, joinProb},
+  tempX = data[[All, 1]];
+  tempY = data[[All, 2]];
+  Table[If[data[[i, 1]] <= 0.5, tempX[[i]] = 0, tempX[[i]] = 1], {i, 
+    Length[data]}]; (*making tempX to be composed of 1s and 0s to start the \
+partitions*)
+  Table[If[data[[i, 2]] <= 0.5, tempY[[i]] = 0, tempY[[i]] = 1], {i, 
+    Length[data]}];
+  bemapX = 
+   Partition[tempX, 2, 
+    1];(*creating the encoding pattern based on the order of X*)
+  bemapY = Partition[tempY, 2, 1];
+  tupX = Tuples[{0, 1}, 
+    2];(*creating each of the encoding cases to check later*)
+  tupY = Tuples[{0, 1}, 2];
+  posX = Table[
+    Position[bemapX, tupX[[i]]] // Flatten, {i, 1, 
+     Length@tupX}]; (*getting the positions of x for each of the encoding \
+cases*)
+  posY = Table[
+    Position[bemapY, tupY[[i]]] // Flatten, {i, 1, 
+     Length@
+      tupY}];(*getting the positions of Y for each of the encoding cases*)
+  margprobsX = 
+   Table[Length@posX[[i]]/Total[Length /@ posX], {i, 1, Length@posX}];
+  margprobsY = 
+   Table[Length@posY[[i]]/Total[Length /@ posY], {i, 1, Length@posY}];
+  finalPos = 
+   Flatten[Table[
+     Flatten[Intersection[posX[[i]], posY[[j]]]], {i, 1, Length@posX}, {j, 1, 
+      Length@posY}], 1];
+  voidPos = 
+   Position[Table[Length@finalPos[[i]] == 0, {i, 1, Length@finalPos}], True];
+  finalPosition = 
+   Delete[finalPos, 
+    voidPos];(*removing the points where the probability is 0 so there is no \
+1/0 interdermined*)
+  jointData = Table[data[[finalPosition[[i]]]], {i, 1, Length@finalPosition}];
+  joinProb = 
+   Table[Length@jointData[[i]]/Total[Length /@ jointData], {i, 1, 
+     Length@jointData}];
+  (*calculating the Shannon entropies for X, Y and the joint XY*)
+  hx = N[-Total[
+      Table[If[margprobsX[[i]] != 0, margprobsX[[i]]*Log2[margprobsX[[i]]], 
+        0], {i, 1, Length@margprobsX}]]];
+  hy = N[-Total[
+      Table[If[margprobsY[[i]] != 0, margprobsY[[i]]*Log2[margprobsY[[i]]], 
+        0], {i, 1, Length@margprobsY}]]];
+  hxy = -N[
+     Total[Table[joinProb[[i]]*Log2[joinProb[[i]]], {i, 1, Length@joinProb}]]];
+  caMI = N[
+    hx + hy - 
+     hxy];(*CaMI is calculated this way but only if X and Y have different \
+orders, at least 2*L of difference*)
+  N[caMI]
+  ]
+
+Calculating directionality index
+
+di[data_] := caMIcacl[data, 2, 4] - caMIcacl[data, 4, 2];
+
+For a more detailed description why this is the case refer to the word document in the repository.
