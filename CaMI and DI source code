@@ -1,9 +1,9 @@
-Please note that for the functions defined below to work as expected, normalisation of the data is required between 0 and 1.
+(*Please note that for the functions defined below to work as expected, normalisation of the data is required between 0 and 1.
 
 Function to calculate CaMI
 
 Input for the caMIcalc: takes bivariate data as a first argument (data_), the other 2 arguments are ordX and ordY (ordX_, ordY_) - length of the symbolic sequence for analysis in x and y, for example ordX=2 and ordY=5: blocks of 2 points in variable X and 5 points in variable Y will be analysed. In this case, causality is measured considering 2 points of the past of X channel in the time-series, and 2 points of the past and 3 points of the future of the Y channel of the time-series.
-Output of the caMIcalc: returns the Causal mutual information from X to Y or Y to X, depending on the last 2 input arguments, specified by the user
+Output of the caMIcalc: returns the Causal mutual information from X to Y or Y to X, depending on the last 2 input arguments, specified by the user*)
 
 caMIcacl[data_, ordX_, ordY_] := 
  Module[{tempX, tempY, bemapX, tupY, tupX, plotData, bemapY, posX, posY, 
@@ -65,12 +65,12 @@ orders, at least 2*L of difference*)
   N[caMI]
   ]
 
-This function is more general but should be used with 1st argument as the bivariate TS  the orders of partition. As a rule to infer causality from X to Y, if the the partitioning order in X is L, then the partitioning order in Y should 2*L (caMIcalc[ts, 2, 4]). Conversely, to infer causality from Y to X the opposite orders can be used (caMIcalc[ts, 4, 2]).
+(*This function is more general but should be used with 1st argument as the bivariate TS  the orders of partition. As a rule to infer causality from X to Y, if the the partitioning order in X is L, then the partitioning order in Y should 2*L (caMIcalc[ts, 2, 4]). Conversely, to infer causality from Y to X the opposite orders can be used (caMIcalc[ts, 4, 2]).
 
 Function to obtain mutual information
 
 Input for mi: takes bivariate data (data_), if one wants to use time series with more  than 2 channels, the specific channels need to be specified in the input.
-Output for mi: mutual information quantity, calculated using symbolic sequence of order 2.
+Output for mi: mutual information quantity, calculated using symbolic sequence of order 2.*)
 
 mi[data_] := 
  Module[{tempX, tempY, bemapX, tupY, tupX, plotData, bemapY, posX, posY, 
@@ -132,8 +132,8 @@ orders, at least 2*L of difference*)
   N[caMI]
   ]
 
-Calculating directionality index
+(*Calculating directionality index*)
 
 di[data_] := caMIcacl[data, 2, 4] - caMIcacl[data, 4, 2];
 
-For a more detailed description why this is the case refer to the word document in the repository.
+(*For a more detailed description why this is the case refer to the word document in the repository.*)
