@@ -1,0 +1,762 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 12.1' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[     28442,        752]
+NotebookOptionsPosition[     27016,        722]
+NotebookOutlinePosition[     27436,        738]
+CellTagsIndexPosition[     27393,        735]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell["\<\
+Please note that for the functions defined below to work as expected, \
+normalisation of the data is required between 0 and 1.\
+\>", "Subtitle",
+ CellChangeTimes->{{3.8152515511056414`*^9, 3.815251564095314*^9}, {
+  3.8152517687128053`*^9, 3.8152517988064404`*^9}, {3.815251879695016*^9, 
+  3.8152519297269807`*^9}, {3.815252025355492*^9, 
+  3.815252027255122*^9}},ExpressionUUID->"2ed8b687-c9bd-417f-9435-\
+b2adda5f4432"],
+
+Cell[CellGroupData[{
+
+Cell["Function to calculate CaMI", "Title",
+ CellChangeTimes->{{3.815252033182293*^9, 
+  3.8152520445026507`*^9}},ExpressionUUID->"37254de6-6856-4ae2-8df4-\
+f8622b071d9f"],
+
+Cell[TextData[{
+ StyleBox["Input for the caMIcalc",
+  FontWeight->"Bold"],
+ ": takes bivariate data as a first argument (data_), the other 2 arguments \
+are ordX and ordY (ordX_, ordY_) - length of the symbolic sequence for \
+analysis in x and y, for example ordX=2 and ordY=5: blocks of 2 points in \
+variable X and 5 points in variable Y will be analysed. In this case, \
+causality is measured considering 2 points of the past of X channel in the \
+time-series, and 2 points of the past and 3 points of the future of the Y \
+channel of the time-series.\n",
+ StyleBox["Output of the caMIcalc",
+  FontWeight->"Bold"],
+ ": returns the Causal mutual information from X to Y or Y to X, depending on \
+the last 2 input arguments, specified by the user"
+}], "Subtitle",
+ CellChangeTimes->{
+  3.8152520519233093`*^9},ExpressionUUID->"33e9a7d4-16d8-4a03-9dbb-\
+1b131ec3d4aa"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"caMIcacl", "[", 
+   RowBox[{"data_", ",", "ordX_", ",", "ordY_"}], "]"}], ":=", 
+  RowBox[{"Module", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{
+     "tempX", ",", "tempY", ",", "bemapX", ",", "tupY", ",", "tupX", ",", 
+      "plotData", ",", "bemapY", ",", "posX", ",", "posY", ",", "finalPos", 
+      ",", "voidPos", ",", "finalPosition", ",", "jointData", ",", "caMI", 
+      ",", "hx", ",", "hy", ",", "hxy", ",", "margprobsX", ",", "margprobsY", 
+      ",", "joinProb"}], "}"}], ",", "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{"tempX", "=", 
+      RowBox[{"data", "[", 
+       RowBox[{"[", 
+        RowBox[{"All", ",", "1"}], "]"}], "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"tempY", "=", 
+      RowBox[{"data", "[", 
+       RowBox[{"[", 
+        RowBox[{"All", ",", "2"}], "]"}], "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"Table", "[", 
+      RowBox[{
+       RowBox[{"If", "[", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"data", "[", 
+           RowBox[{"[", 
+            RowBox[{"i", ",", "1"}], "]"}], "]"}], "\[LessEqual]", "0.5"}], 
+         ",", 
+         RowBox[{
+          RowBox[{"tempX", "[", 
+           RowBox[{"[", "i", "]"}], "]"}], "=", "0"}], ",", 
+         RowBox[{
+          RowBox[{"tempX", "[", 
+           RowBox[{"[", "i", "]"}], "]"}], "=", "1"}]}], "]"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"i", ",", 
+         RowBox[{"Length", "[", "data", "]"}]}], "}"}]}], "]"}], ";", " ", 
+     RowBox[{"(*", 
+      RowBox[{
+      "making", " ", "tempX", " ", "to", " ", "be", " ", "composed", " ", 
+       "of", " ", "1", "s", " ", "and", " ", "0", "s", " ", "to", " ", 
+       "start", " ", "the", " ", "partitions"}], "*)"}], 
+     "\[IndentingNewLine]", 
+     RowBox[{"Table", "[", 
+      RowBox[{
+       RowBox[{"If", "[", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"data", "[", 
+           RowBox[{"[", 
+            RowBox[{"i", ",", "2"}], "]"}], "]"}], "\[LessEqual]", "0.5"}], 
+         ",", 
+         RowBox[{
+          RowBox[{"tempY", "[", 
+           RowBox[{"[", "i", "]"}], "]"}], "=", "0"}], ",", 
+         RowBox[{
+          RowBox[{"tempY", "[", 
+           RowBox[{"[", "i", "]"}], "]"}], "=", "1"}]}], "]"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"i", ",", 
+         RowBox[{"Length", "[", "data", "]"}]}], "}"}]}], "]"}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"bemapX", "=", 
+      RowBox[{"Partition", "[", 
+       RowBox[{"tempX", ",", "ordX", ",", "1"}], "]"}]}], ";", 
+     RowBox[{"(*", 
+      RowBox[{
+      "creating", " ", "the", " ", "encoding", " ", "pattern", " ", "based", 
+       " ", "on", " ", "the", " ", "order", " ", "of", " ", "X"}], "*)"}], 
+     "\[IndentingNewLine]", 
+     RowBox[{"bemapY", "=", 
+      RowBox[{"Partition", "[", 
+       RowBox[{"tempY", ",", "ordY", ",", "1"}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"tupX", "=", 
+      RowBox[{"Tuples", "[", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"0", ",", "1"}], "}"}], ",", "ordX"}], "]"}]}], ";", 
+     RowBox[{"(*", 
+      RowBox[{
+      "creating", " ", "each", " ", "of", " ", "the", " ", "encoding", " ", 
+       "cases", " ", "to", " ", "check", " ", "later"}], "*)"}], 
+     "\[IndentingNewLine]", 
+     RowBox[{"tupY", "=", 
+      RowBox[{"Tuples", "[", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"0", ",", "1"}], "}"}], ",", "ordY"}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"posX", "=", 
+      RowBox[{"Table", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"Position", "[", 
+          RowBox[{"bemapX", ",", 
+           RowBox[{"tupX", "[", 
+            RowBox[{"[", "i", "]"}], "]"}]}], "]"}], "//", "Flatten"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"i", ",", "1", ",", 
+          RowBox[{"Length", "@", "tupX"}]}], "}"}]}], "]"}]}], ";", " ", 
+     RowBox[{"(*", 
+      RowBox[{
+      "getting", " ", "the", " ", "positions", " ", "of", " ", "x", " ", 
+       "for", " ", "each", " ", "of", " ", "the", " ", "encoding", " ", 
+       "cases"}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"posY", "=", 
+      RowBox[{"Table", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"Position", "[", 
+          RowBox[{"bemapY", ",", 
+           RowBox[{"tupY", "[", 
+            RowBox[{"[", "i", "]"}], "]"}]}], "]"}], "//", "Flatten"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"i", ",", "1", ",", 
+          RowBox[{"Length", "@", "tupY"}]}], "}"}]}], "]"}]}], ";", 
+     RowBox[{"(*", 
+      RowBox[{
+      "getting", " ", "the", " ", "positions", " ", "of", " ", "Y", " ", 
+       "for", " ", "each", " ", "of", " ", "the", " ", "encoding", " ", 
+       "cases"}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"margprobsX", "=", 
+      RowBox[{"Table", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"Length", "@", 
+          RowBox[{"posX", "[", 
+           RowBox[{"[", "i", "]"}], "]"}]}], "/", 
+         RowBox[{"Total", "[", 
+          RowBox[{"Length", "/@", "posX"}], "]"}]}], ",", 
+        RowBox[{"{", 
+         RowBox[{"i", ",", "1", ",", 
+          RowBox[{"Length", "@", "posX"}]}], "}"}]}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"margprobsY", "=", 
+      RowBox[{"Table", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"Length", "@", 
+          RowBox[{"posY", "[", 
+           RowBox[{"[", "i", "]"}], "]"}]}], "/", 
+         RowBox[{"Total", "[", 
+          RowBox[{"Length", "/@", "posY"}], "]"}]}], ",", 
+        RowBox[{"{", 
+         RowBox[{"i", ",", "1", ",", 
+          RowBox[{"Length", "@", "posY"}]}], "}"}]}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"finalPos", "=", 
+      RowBox[{"Flatten", "[", 
+       RowBox[{
+        RowBox[{"Table", "[", 
+         RowBox[{
+          RowBox[{"Flatten", "[", 
+           RowBox[{"Intersection", "[", 
+            RowBox[{
+             RowBox[{"posX", "[", 
+              RowBox[{"[", "i", "]"}], "]"}], ",", 
+             RowBox[{"posY", "[", 
+              RowBox[{"[", "j", "]"}], "]"}]}], "]"}], "]"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"i", ",", "1", ",", 
+            RowBox[{"Length", "@", "posX"}]}], "}"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"j", ",", "1", ",", 
+            RowBox[{"Length", "@", "posY"}]}], "}"}]}], "]"}], ",", "1"}], 
+       "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"voidPos", "=", 
+      RowBox[{"Position", "[", 
+       RowBox[{
+        RowBox[{"Table", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"Length", "@", 
+            RowBox[{"finalPos", "[", 
+             RowBox[{"[", "i", "]"}], "]"}]}], "==", "0"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"i", ",", "1", ",", 
+            RowBox[{"Length", "@", "finalPos"}]}], "}"}]}], "]"}], ",", 
+        "True"}], "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"finalPosition", "=", 
+      RowBox[{"Delete", "[", 
+       RowBox[{"finalPos", ",", "voidPos"}], "]"}]}], ";", 
+     RowBox[{"(*", 
+      RowBox[{
+      "removing", " ", "the", " ", "points", " ", "where", " ", "the", " ", 
+       "probability", " ", "is", " ", "0", " ", "so", " ", "there", " ", "is",
+        " ", "no", " ", 
+       RowBox[{"1", "/", "0"}], " ", "interdermined"}], "*)"}], 
+     "\[IndentingNewLine]", 
+     RowBox[{"jointData", "=", 
+      RowBox[{"Table", "[", 
+       RowBox[{
+        RowBox[{"data", "[", 
+         RowBox[{"[", 
+          RowBox[{"finalPosition", "[", 
+           RowBox[{"[", "i", "]"}], "]"}], "]"}], "]"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"i", ",", "1", ",", 
+          RowBox[{"Length", "@", "finalPosition"}]}], "}"}]}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"joinProb", "=", 
+      RowBox[{"Table", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"Length", "@", 
+          RowBox[{"jointData", "[", 
+           RowBox[{"[", "i", "]"}], "]"}]}], "/", 
+         RowBox[{"Total", "[", 
+          RowBox[{"Length", "/@", "jointData"}], "]"}]}], ",", 
+        RowBox[{"{", 
+         RowBox[{"i", ",", "1", ",", 
+          RowBox[{"Length", "@", "jointData"}]}], "}"}]}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+       RowBox[{
+       "calculating", " ", "the", " ", "Shannon", " ", "entropies", " ", 
+        "for", " ", "X"}], ",", " ", 
+       RowBox[{"Y", " ", "and", " ", "the", " ", "joint", " ", "XY"}]}], 
+      "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"hx", "=", 
+      RowBox[{"N", "[", 
+       RowBox[{"-", 
+        RowBox[{"Total", "[", 
+         RowBox[{"Table", "[", 
+          RowBox[{
+           RowBox[{"If", "[", 
+            RowBox[{
+             RowBox[{
+              RowBox[{"margprobsX", "[", 
+               RowBox[{"[", "i", "]"}], "]"}], "\[NotEqual]", "0"}], ",", 
+             RowBox[{
+              RowBox[{"margprobsX", "[", 
+               RowBox[{"[", "i", "]"}], "]"}], "*", 
+              RowBox[{"Log2", "[", 
+               RowBox[{"margprobsX", "[", 
+                RowBox[{"[", "i", "]"}], "]"}], "]"}]}], ",", "0"}], "]"}], 
+           ",", 
+           RowBox[{"{", 
+            RowBox[{"i", ",", "1", ",", 
+             RowBox[{"Length", "@", "margprobsX"}]}], "}"}]}], "]"}], "]"}]}],
+        "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"hy", "=", 
+      RowBox[{"N", "[", 
+       RowBox[{"-", 
+        RowBox[{"Total", "[", 
+         RowBox[{"Table", "[", 
+          RowBox[{
+           RowBox[{"If", "[", 
+            RowBox[{
+             RowBox[{
+              RowBox[{"margprobsY", "[", 
+               RowBox[{"[", "i", "]"}], "]"}], "\[NotEqual]", "0"}], ",", 
+             RowBox[{
+              RowBox[{"margprobsY", "[", 
+               RowBox[{"[", "i", "]"}], "]"}], "*", 
+              RowBox[{"Log2", "[", 
+               RowBox[{"margprobsY", "[", 
+                RowBox[{"[", "i", "]"}], "]"}], "]"}]}], ",", "0"}], "]"}], 
+           ",", 
+           RowBox[{"{", 
+            RowBox[{"i", ",", "1", ",", 
+             RowBox[{"Length", "@", "margprobsY"}]}], "}"}]}], "]"}], "]"}]}],
+        "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"hxy", "=", 
+      RowBox[{"-", 
+       RowBox[{"N", "[", 
+        RowBox[{"Total", "[", 
+         RowBox[{"Table", "[", 
+          RowBox[{
+           RowBox[{
+            RowBox[{"joinProb", "[", 
+             RowBox[{"[", "i", "]"}], "]"}], "*", 
+            RowBox[{"Log2", "[", 
+             RowBox[{"joinProb", "[", 
+              RowBox[{"[", "i", "]"}], "]"}], "]"}]}], ",", 
+           RowBox[{"{", 
+            RowBox[{"i", ",", "1", ",", 
+             RowBox[{"Length", "@", "joinProb"}]}], "}"}]}], "]"}], "]"}], 
+        "]"}]}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"caMI", "=", 
+      RowBox[{"N", "[", 
+       RowBox[{"hx", "+", "hy", "-", "hxy"}], "]"}]}], ";", 
+     RowBox[{"(*", 
+      RowBox[{
+       RowBox[{
+       "CaMI", " ", "is", " ", "calculated", " ", "this", " ", "way", " ", 
+        "but", " ", "only", " ", "if", " ", "X", " ", "and", " ", "Y", " ", 
+        "have", " ", "different", " ", "orders"}], ",", " ", 
+       RowBox[{
+       "at", " ", "least", " ", "2", "*", "L", " ", "of", " ", 
+        "difference"}]}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"N", "[", "caMI", "]"}]}]}], "\[IndentingNewLine]", 
+   "]"}]}]], "Input",
+ CellLabel->"In[1]:=",ExpressionUUID->"8451f5bb-c922-4f43-8c86-4dd5dfa11065"],
+
+Cell["\<\
+This function is more general but should be used with 1st argument as the \
+bivariate TS  the orders of partition. As a rule to infer causality from X to \
+Y, if the the partitioning order in X is L, then the partitioning order in Y \
+should 2*L (caMIcalc[ts, 2, 4]). Conversely, to infer causality from Y to X \
+the opposite orders can be used (caMIcalc[ts, 4, 2]).\
+\>", "Text",
+ CellChangeTimes->{{3.815252081876867*^9, 3.815252198537734*^9}, {
+  3.815252254080282*^9, 
+  3.815252310051626*^9}},ExpressionUUID->"657bfcdb-94f7-452b-a199-\
+3c0ce945738c"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Function to obtain mutual information", "Title",
+ CellChangeTimes->{{3.81525241250966*^9, 3.81525243774562*^9}, 
+   3.8152524741324444`*^9},ExpressionUUID->"23127029-4a3d-4d5f-ae9a-\
+8cfeb5e0f6af"],
+
+Cell[TextData[{
+ StyleBox["Input for mi",
+  FontWeight->"Bold"],
+ ": takes bivariate data (data_), if one wants to use time series with more  \
+than 2 channels, the specific channels need to be specified in the input.\n",
+ StyleBox["Output for mi",
+  FontWeight->"Bold"],
+ ": mutual information quantity, calculated using symbolic sequence of order \
+2."
+}], "Subtitle",
+ CellChangeTimes->{{3.815252477870447*^9, 
+  3.8152525369374604`*^9}},ExpressionUUID->"9773283f-27e3-44b0-a65f-\
+739cb74154e0"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"mi", "[", "data_", "]"}], ":=", 
+  RowBox[{"Module", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{
+     "tempX", ",", "tempY", ",", "bemapX", ",", "tupY", ",", "tupX", ",", 
+      "plotData", ",", "bemapY", ",", "posX", ",", "posY", ",", "finalPos", 
+      ",", "voidPos", ",", "finalPosition", ",", "jointData", ",", "caMI", 
+      ",", "hx", ",", "hy", ",", "hxy", ",", "margprobsX", ",", "margprobsY", 
+      ",", "joinProb"}], "}"}], ",", "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{"tempX", "=", 
+      RowBox[{"data", "[", 
+       RowBox[{"[", 
+        RowBox[{"All", ",", "1"}], "]"}], "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"tempY", "=", 
+      RowBox[{"data", "[", 
+       RowBox[{"[", 
+        RowBox[{"All", ",", "2"}], "]"}], "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"Table", "[", 
+      RowBox[{
+       RowBox[{"If", "[", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"data", "[", 
+           RowBox[{"[", 
+            RowBox[{"i", ",", "1"}], "]"}], "]"}], "\[LessEqual]", "0.5"}], 
+         ",", 
+         RowBox[{
+          RowBox[{"tempX", "[", 
+           RowBox[{"[", "i", "]"}], "]"}], "=", "0"}], ",", 
+         RowBox[{
+          RowBox[{"tempX", "[", 
+           RowBox[{"[", "i", "]"}], "]"}], "=", "1"}]}], "]"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"i", ",", 
+         RowBox[{"Length", "[", "data", "]"}]}], "}"}]}], "]"}], ";", " ", 
+     RowBox[{"(*", 
+      RowBox[{
+      "making", " ", "tempX", " ", "to", " ", "be", " ", "composed", " ", 
+       "of", " ", "1", "s", " ", "and", " ", "0", "s", " ", "to", " ", 
+       "start", " ", "the", " ", "partitions"}], "*)"}], 
+     "\[IndentingNewLine]", 
+     RowBox[{"Table", "[", 
+      RowBox[{
+       RowBox[{"If", "[", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"data", "[", 
+           RowBox[{"[", 
+            RowBox[{"i", ",", "2"}], "]"}], "]"}], "\[LessEqual]", "0.5"}], 
+         ",", 
+         RowBox[{
+          RowBox[{"tempY", "[", 
+           RowBox[{"[", "i", "]"}], "]"}], "=", "0"}], ",", 
+         RowBox[{
+          RowBox[{"tempY", "[", 
+           RowBox[{"[", "i", "]"}], "]"}], "=", "1"}]}], "]"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"i", ",", 
+         RowBox[{"Length", "[", "data", "]"}]}], "}"}]}], "]"}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"bemapX", "=", 
+      RowBox[{"Partition", "[", 
+       RowBox[{"tempX", ",", "2", ",", "1"}], "]"}]}], ";", 
+     RowBox[{"(*", 
+      RowBox[{
+      "creating", " ", "the", " ", "encoding", " ", "pattern", " ", "based", 
+       " ", "on", " ", "the", " ", "order", " ", "of", " ", "X"}], "*)"}], 
+     "\[IndentingNewLine]", 
+     RowBox[{"bemapY", "=", 
+      RowBox[{"Partition", "[", 
+       RowBox[{"tempY", ",", "2", ",", "1"}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"tupX", "=", 
+      RowBox[{"Tuples", "[", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"0", ",", "1"}], "}"}], ",", "2"}], "]"}]}], ";", 
+     RowBox[{"(*", 
+      RowBox[{
+      "creating", " ", "each", " ", "of", " ", "the", " ", "encoding", " ", 
+       "cases", " ", "to", " ", "check", " ", "later"}], "*)"}], 
+     "\[IndentingNewLine]", 
+     RowBox[{"tupY", "=", 
+      RowBox[{"Tuples", "[", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"0", ",", "1"}], "}"}], ",", "2"}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"posX", "=", 
+      RowBox[{"Table", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"Position", "[", 
+          RowBox[{"bemapX", ",", 
+           RowBox[{"tupX", "[", 
+            RowBox[{"[", "i", "]"}], "]"}]}], "]"}], "//", "Flatten"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"i", ",", "1", ",", 
+          RowBox[{"Length", "@", "tupX"}]}], "}"}]}], "]"}]}], ";", " ", 
+     RowBox[{"(*", 
+      RowBox[{
+      "getting", " ", "the", " ", "positions", " ", "of", " ", "x", " ", 
+       "for", " ", "each", " ", "of", " ", "the", " ", "encoding", " ", 
+       "cases"}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"posY", "=", 
+      RowBox[{"Table", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"Position", "[", 
+          RowBox[{"bemapY", ",", 
+           RowBox[{"tupY", "[", 
+            RowBox[{"[", "i", "]"}], "]"}]}], "]"}], "//", "Flatten"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"i", ",", "1", ",", 
+          RowBox[{"Length", "@", "tupY"}]}], "}"}]}], "]"}]}], ";", 
+     RowBox[{"(*", 
+      RowBox[{
+      "getting", " ", "the", " ", "positions", " ", "of", " ", "Y", " ", 
+       "for", " ", "each", " ", "of", " ", "the", " ", "encoding", " ", 
+       "cases"}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"margprobsX", "=", 
+      RowBox[{"Table", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"Length", "@", 
+          RowBox[{"posX", "[", 
+           RowBox[{"[", "i", "]"}], "]"}]}], "/", 
+         RowBox[{"Total", "[", 
+          RowBox[{"Length", "/@", "posX"}], "]"}]}], ",", 
+        RowBox[{"{", 
+         RowBox[{"i", ",", "1", ",", 
+          RowBox[{"Length", "@", "posX"}]}], "}"}]}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"margprobsY", "=", 
+      RowBox[{"Table", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"Length", "@", 
+          RowBox[{"posY", "[", 
+           RowBox[{"[", "i", "]"}], "]"}]}], "/", 
+         RowBox[{"Total", "[", 
+          RowBox[{"Length", "/@", "posY"}], "]"}]}], ",", 
+        RowBox[{"{", 
+         RowBox[{"i", ",", "1", ",", 
+          RowBox[{"Length", "@", "posY"}]}], "}"}]}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"finalPos", "=", 
+      RowBox[{"Flatten", "[", 
+       RowBox[{
+        RowBox[{"Table", "[", 
+         RowBox[{
+          RowBox[{"Flatten", "[", 
+           RowBox[{"Intersection", "[", 
+            RowBox[{
+             RowBox[{"posX", "[", 
+              RowBox[{"[", "i", "]"}], "]"}], ",", 
+             RowBox[{"posY", "[", 
+              RowBox[{"[", "j", "]"}], "]"}]}], "]"}], "]"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"i", ",", "1", ",", 
+            RowBox[{"Length", "@", "posX"}]}], "}"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"j", ",", "1", ",", 
+            RowBox[{"Length", "@", "posY"}]}], "}"}]}], "]"}], ",", "1"}], 
+       "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"voidPos", "=", 
+      RowBox[{"Position", "[", 
+       RowBox[{
+        RowBox[{"Table", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"Length", "@", 
+            RowBox[{"finalPos", "[", 
+             RowBox[{"[", "i", "]"}], "]"}]}], "==", "0"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"i", ",", "1", ",", 
+            RowBox[{"Length", "@", "finalPos"}]}], "}"}]}], "]"}], ",", 
+        "True"}], "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"finalPosition", "=", 
+      RowBox[{"Delete", "[", 
+       RowBox[{"finalPos", ",", "voidPos"}], "]"}]}], ";", 
+     RowBox[{"(*", 
+      RowBox[{
+      "removing", " ", "the", " ", "points", " ", "where", " ", "the", " ", 
+       "probability", " ", "is", " ", "0", " ", "so", " ", "there", " ", "is",
+        " ", "no", " ", 
+       RowBox[{"1", "/", "0"}], " ", "interdermined"}], "*)"}], 
+     "\[IndentingNewLine]", 
+     RowBox[{"jointData", "=", 
+      RowBox[{"Table", "[", 
+       RowBox[{
+        RowBox[{"data", "[", 
+         RowBox[{"[", 
+          RowBox[{"finalPosition", "[", 
+           RowBox[{"[", "i", "]"}], "]"}], "]"}], "]"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"i", ",", "1", ",", 
+          RowBox[{"Length", "@", "finalPosition"}]}], "}"}]}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"joinProb", "=", 
+      RowBox[{"Table", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"Length", "@", 
+          RowBox[{"jointData", "[", 
+           RowBox[{"[", "i", "]"}], "]"}]}], "/", 
+         RowBox[{"Total", "[", 
+          RowBox[{"Length", "/@", "jointData"}], "]"}]}], ",", 
+        RowBox[{"{", 
+         RowBox[{"i", ",", "1", ",", 
+          RowBox[{"Length", "@", "jointData"}]}], "}"}]}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+       RowBox[{
+       "calculating", " ", "the", " ", "Shannon", " ", "entropies", " ", 
+        "for", " ", "X"}], ",", " ", 
+       RowBox[{"Y", " ", "and", " ", "the", " ", "joint", " ", "XY"}]}], 
+      "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"hx", "=", 
+      RowBox[{"N", "[", 
+       RowBox[{"-", 
+        RowBox[{"Total", "[", 
+         RowBox[{"Table", "[", 
+          RowBox[{
+           RowBox[{"If", "[", 
+            RowBox[{
+             RowBox[{
+              RowBox[{"margprobsX", "[", 
+               RowBox[{"[", "i", "]"}], "]"}], "\[NotEqual]", "0"}], ",", 
+             RowBox[{
+              RowBox[{"margprobsX", "[", 
+               RowBox[{"[", "i", "]"}], "]"}], "*", 
+              RowBox[{"Log2", "[", 
+               RowBox[{"margprobsX", "[", 
+                RowBox[{"[", "i", "]"}], "]"}], "]"}]}], ",", "0"}], "]"}], 
+           ",", 
+           RowBox[{"{", 
+            RowBox[{"i", ",", "1", ",", 
+             RowBox[{"Length", "@", "margprobsX"}]}], "}"}]}], "]"}], "]"}]}],
+        "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"hy", "=", 
+      RowBox[{"N", "[", 
+       RowBox[{"-", 
+        RowBox[{"Total", "[", 
+         RowBox[{"Table", "[", 
+          RowBox[{
+           RowBox[{"If", "[", 
+            RowBox[{
+             RowBox[{
+              RowBox[{"margprobsY", "[", 
+               RowBox[{"[", "i", "]"}], "]"}], "\[NotEqual]", "0"}], ",", 
+             RowBox[{
+              RowBox[{"margprobsY", "[", 
+               RowBox[{"[", "i", "]"}], "]"}], "*", 
+              RowBox[{"Log2", "[", 
+               RowBox[{"margprobsY", "[", 
+                RowBox[{"[", "i", "]"}], "]"}], "]"}]}], ",", "0"}], "]"}], 
+           ",", 
+           RowBox[{"{", 
+            RowBox[{"i", ",", "1", ",", 
+             RowBox[{"Length", "@", "margprobsY"}]}], "}"}]}], "]"}], "]"}]}],
+        "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"hxy", "=", 
+      RowBox[{"-", 
+       RowBox[{"N", "[", 
+        RowBox[{"Total", "[", 
+         RowBox[{"Table", "[", 
+          RowBox[{
+           RowBox[{
+            RowBox[{"joinProb", "[", 
+             RowBox[{"[", "i", "]"}], "]"}], "*", 
+            RowBox[{"Log2", "[", 
+             RowBox[{"joinProb", "[", 
+              RowBox[{"[", "i", "]"}], "]"}], "]"}]}], ",", 
+           RowBox[{"{", 
+            RowBox[{"i", ",", "1", ",", 
+             RowBox[{"Length", "@", "joinProb"}]}], "}"}]}], "]"}], "]"}], 
+        "]"}]}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"caMI", "=", 
+      RowBox[{"N", "[", 
+       RowBox[{"hx", "+", "hy", "-", "hxy"}], "]"}]}], ";", 
+     RowBox[{"(*", 
+      RowBox[{
+       RowBox[{
+       "CaMI", " ", "is", " ", "calculated", " ", "this", " ", "way", " ", 
+        "but", " ", "only", " ", "if", " ", "X", " ", "and", " ", "Y", " ", 
+        "have", " ", "different", " ", "orders"}], ",", " ", 
+       RowBox[{
+       "at", " ", "least", " ", "2", "*", "L", " ", "of", " ", 
+        "difference"}]}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"N", "[", "caMI", "]"}]}]}], "\[IndentingNewLine]", 
+   "]"}]}]], "Input",
+ CellChangeTimes->{{3.8152525723608494`*^9, 
+  3.8152525730979958`*^9}},ExpressionUUID->"da807dca-421e-44ee-b96c-\
+0ecdc200f0dd"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Calculating directionality index", "Title",
+ CellChangeTimes->{{3.815252580016921*^9, 
+  3.8152525891958747`*^9}},ExpressionUUID->"ecc91eb7-bfc3-4b77-81d5-\
+48c186a588a1"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"di", "[", "data_", "]"}], ":=", 
+   RowBox[{
+    RowBox[{"caMIcacl", "[", 
+     RowBox[{"data", ",", "2", ",", "4"}], "]"}], "-", 
+    RowBox[{"caMIcacl", "[", 
+     RowBox[{"data", ",", "4", ",", "2"}], "]"}]}]}], ";"}]], "Input",
+ CellChangeTimes->{{3.8152530780710936`*^9, 3.8152531247812567`*^9}, {
+  3.815253170898964*^9, 
+  3.81525324388356*^9}},ExpressionUUID->"56de68b4-f344-43bb-be53-\
+83e1a3ddd05c"],
+
+Cell["\<\
+For a more detailed description why this is the case refer to the word \
+document in the repository.\
+\>", "Text",
+ CellChangeTimes->{{3.8152532962122893`*^9, 
+  3.8152533393492785`*^9}},ExpressionUUID->"24812cc5-9d35-4c97-ad1c-\
+87d2f8561bef"]
+}, Open  ]]
+},
+WindowSize->{990., 574.8},
+WindowMargins->{{18, Automatic}, {-22.799999999999955`, Automatic}},
+FrontEndVersion->"12.1 for Microsoft Windows (64-bit) (March 18, 2020)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"b4fe3304-7f30-4206-9e22-bfafbde78723"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[558, 20, 432, 8, 85, "Subtitle",ExpressionUUID->"2ed8b687-c9bd-417f-9435-b2adda5f4432"],
+Cell[CellGroupData[{
+Cell[1015, 32, 171, 3, 97, "Title",ExpressionUUID->"37254de6-6856-4ae2-8df4-f8622b071d9f"],
+Cell[1189, 37, 868, 17, 277, "Subtitle",ExpressionUUID->"33e9a7d4-16d8-4a03-9dbb-1b131ec3d4aa"],
+Cell[2060, 56, 11353, 298, 634, "Input",ExpressionUUID->"8451f5bb-c922-4f43-8c86-4dd5dfa11065"],
+Cell[13416, 356, 565, 10, 81, "Text",ExpressionUUID->"657bfcdb-94f7-452b-a199-3c0ce945738c"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[14018, 371, 203, 3, 97, "Title",ExpressionUUID->"23127029-4a3d-4d5f-ae9a-8cfeb5e0f6af"],
+Cell[14224, 376, 498, 12, 117, "Subtitle",ExpressionUUID->"9773283f-27e3-44b0-a65f-739cb74154e0"],
+Cell[14725, 390, 11345, 299, 634, "Input",ExpressionUUID->"da807dca-421e-44ee-b96c-0ecdc200f0dd"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[26107, 694, 177, 3, 97, "Title",ExpressionUUID->"ecc91eb7-bfc3-4b77-81d5-48c186a588a1"],
+Cell[26287, 699, 456, 12, 28, "Input",ExpressionUUID->"56de68b4-f344-43bb-be53-83e1a3ddd05c"],
+Cell[26746, 713, 254, 6, 35, "Text",ExpressionUUID->"24812cc5-9d35-4c97-ad1c-87d2f8561bef"]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)
+
